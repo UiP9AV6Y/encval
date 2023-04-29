@@ -1,0 +1,9 @@
+.encval
+encval
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out

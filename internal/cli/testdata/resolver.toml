@@ -1,0 +1,9 @@
+snake_case = "test"
+str = "value"
+int = 1
+ary = ["item"]
+
+[nested]
+snake_case = "test"
+str = "value"
+int = 1

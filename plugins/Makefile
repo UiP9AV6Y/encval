@@ -1,0 +1,47 @@
+INSTALL ?= install
+INSTALL_DIR = $(INSTALL) -d
+INSTALL_DATA = $(INSTALL) -m0644
+INSTALL_PROGRAM = $(INSTALL) -m0755
+
+GO ?= go
+GOOS ?= $(shell $(GO) env GOOS)
+GOLD_FLAGS ?= -s -w
+
+ifeq ($(GOOS),windows)
+EXT := .dll
+else
+EXT := .so
+endif
+
+PROJECT := encval
+
+PLUGINS := age plain
+PLUGIN_objects = $(addprefix $(PROJECT)_,$(addsuffix $(EXT),$(PLUGINS)))
+
+.PHONY: all
+all: plugins
+
+.PHONY: plugins
+plugins: $(PLUGIN_objects)
+
+$(PROJECT)_%$(EXT):
+	cd $* ; $(GO) build -buildmode=plugin \
+		$(GOBUILD_FLAGS) \
+		-ldflags="$(GOLD_FLAGS)" \
+		-o ../$(PROJECT)_$*$(EXT) \
+		.
+
+.PHONY: update-deps
+update-deps:
+	for P in $(PLUGINS); do \
+		$(MAKE) mod-tidy PLUGIN=$$P; \
+	done
+
+.PHONY: mod-tidy
+mod-tidy: PLUGIN=plain
+mod-tidy:
+	cd $(PLUGIN); $(GO) mod tidy
+	
+.PHONY: clean
+clean:
+	$(RM) $(PLUGIN_objects)
