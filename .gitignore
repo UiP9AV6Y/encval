@@ -1,7 +1,7 @@
 /dist
 /build
 .encval/
-encval
+/encval
 *.exe
 *.exe~
 *.dll
