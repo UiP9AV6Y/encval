@@ -3,8 +3,11 @@ INSTALL_DIR = $(INSTALL) -d
 INSTALL_DATA = $(INSTALL) -m0644
 INSTALL_PROGRAM = $(INSTALL) -m0755
 
+PREFIX ?= /usr/local
+
 GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
+GOARCH ?= $(shell $(GO) env GOARCH)
 GOLD_FLAGS ?= -s -w
 
 ifeq ($(GOOS),windows)
@@ -25,7 +28,7 @@ all: plugins
 plugins: $(PLUGIN_objects)
 
 $(PROJECT)_%$(EXT):
-	cd $* ; $(GO) build -buildmode=plugin \
+	cd $* ; GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -buildmode=plugin \
 		$(GOBUILD_FLAGS) \
 		-ldflags="$(GOLD_FLAGS)" \
 		-o ../$(PROJECT)_$*$(EXT) \
@@ -41,7 +44,11 @@ update-deps:
 mod-tidy: PLUGIN=plain
 mod-tidy:
 	cd $(PLUGIN); $(GO) mod tidy
-	
+
+.PHONY: install
+install:
+	$(INSTALL_DATA) -D -t $(DESTDIR)$(PREFIX)/lib/$(PROJECT) $(PLUGIN_objects)
+
 .PHONY: clean
 clean:
 	$(RM) $(PLUGIN_objects)

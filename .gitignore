@@ -1,4 +1,6 @@
-.encval
+/dist
+/build
+.encval/
 encval
 *.exe
 *.exe~
@@ -7,3 +9,4 @@ encval
 *.dylib
 *.test
 *.out
+
