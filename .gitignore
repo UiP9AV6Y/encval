@@ -1,5 +1,7 @@
 /dist
 /build
+keys/
+.keys/
 .encval/
 /encval
 *.exe
