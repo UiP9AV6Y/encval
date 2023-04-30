@@ -125,3 +125,15 @@ func (t Tokens) Provision(provider string) (count int) {
 
 	return
 }
+
+func (t Tokens) Plaintext() (count int) {
+	for i, e := range t {
+		d, ok := e.(*DecryptedToken)
+		if ok {
+			t[i] = NewNonMatchToken(d.value)
+			count++
+		}
+	}
+
+	return
+}

@@ -7,7 +7,8 @@ import (
 )
 
 type Decrypt struct {
-	File *os.File `kong:"arg,placeholder='FILE',default='-'"`
+	Parse bool     `kong:"help='Parse the input for tokens instead of decrypting everything',negatable,short='p'"`
+	File  *os.File `kong:"arg,placeholder='FILE',default='-'"`
 }
 
 func NewDecrypt() *Decrypt {
@@ -45,6 +46,11 @@ func (c *Decrypt) Run(ctx *GlobalOptions) error {
 	result, err := tokens.Convert(reg)
 	if err != nil {
 		return err
+	}
+
+	if !c.Parse {
+		affected := result.Plaintext()
+		ctx.Logger().Debug().Printf("Decryption affected %d tokens\n", affected)
 	}
 
 	n, err := result.WriteTo(ctx.Writer())
