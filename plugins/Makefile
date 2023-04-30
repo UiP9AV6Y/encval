@@ -18,8 +18,8 @@ endif
 
 PROJECT := encval
 
-PLUGINS := age plain
-PLUGIN_objects = $(addprefix $(PROJECT)_,$(addsuffix $(EXT),$(PLUGINS)))
+PLUGINS := $(notdir $(patsubst %/main.go,%,$(wildcard ./*/main.go)))
+PLUGIN_objects := $(addprefix $(PROJECT)_,$(addsuffix $(EXT),$(PLUGINS)))
 
 .PHONY: all
 all: plugins
@@ -41,7 +41,7 @@ update-deps:
 	done
 
 .PHONY: mod-tidy
-mod-tidy: PLUGIN=plain
+mod-tidy: PLUGIN=$(firstword $(PLUGINS))
 mod-tidy:
 	cd $(PLUGIN); $(GO) mod tidy
 

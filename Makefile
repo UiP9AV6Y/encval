@@ -16,8 +16,8 @@ else
 EXT :=
 endif
 
-ENTRYPOINTS := encval
-PROGRAM_files = $(addsuffix $(EXT),$(ENTRYPOINTS))
+ENTRYPOINTS := $(notdir $(patsubst %/main.go,%,$(wildcard ./cmd/*/main.go)))
+PROGRAM_files := $(addsuffix $(EXT),$(ENTRYPOINTS))
 
 .PHONY: all
 all: binaries plugins
