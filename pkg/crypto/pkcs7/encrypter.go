@@ -39,6 +39,8 @@ func (e *PKCS7Encrypter) Encrypt(data crypto.Data) (crypto.Data, error) {
 		e.certCache = cert
 	}
 
+	// use the same algorithm as hiera-eyaml
+	pkcs7.ContentEncryptionAlgorithm = pkcs7.EncryptionAlgorithmAES256CBC
 	payload, err := pkcs7.Encrypt(data, []*x509.Certificate{e.certCache})
 	if err != nil {
 		return nil, err
@@ -64,7 +66,12 @@ func (e *PKCS7Encrypter) Decrypt(data crypto.Data) (crypto.Data, error) {
 		e.certCache = cert
 	}
 
-	p7, err := pkcs7.Parse(data)
+	raw, err := crypto.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+
+	p7, err := pkcs7.Parse(raw)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +81,7 @@ func (e *PKCS7Encrypter) Decrypt(data crypto.Data) (crypto.Data, error) {
 		return nil, err
 	}
 
-	return crypto.Decode(payload)
+	return crypto.Data(payload), nil
 }
 
 func (p *PKCS7Encrypter) GenerateSecrets(force bool, ctx context.Context) error {

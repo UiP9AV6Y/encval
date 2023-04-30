@@ -10,9 +10,8 @@ import (
 
 func TestEncrypt(t *testing.T) {
 	type testCase struct {
-		name        string
-		input       string
-		assertError bool
+		name  string
+		input string
 	}
 
 	priv := &PrivateKey{
@@ -25,14 +24,12 @@ func TestEncrypt(t *testing.T) {
 		out := New(priv, pub)
 		assert.Assert(t, out != nil)
 
-		got, err := out.Encrypt(crypto.Data(tc.input))
+		enc, err := out.Encrypt(crypto.Data(tc.input))
+		assert.NilError(t, err)
+		dec, err := out.Decrypt(enc)
+		assert.NilError(t, err)
 
-		if tc.assertError {
-			assert.Assert(t, err != nil)
-		} else {
-			// unless we fake the encryption, the result is not stable
-			assert.Assert(t, len(got) > 0)
-		}
+		assert.Equal(t, string(dec), tc.input)
 	}
 	testCases := []testCase{
 		{

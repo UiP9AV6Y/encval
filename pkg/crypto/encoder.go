@@ -19,12 +19,12 @@ func Encode(data []byte) (Data, error) {
 // Decode is an opiniated Base64 decoder function
 // using a strict variant of base64.RawStdEncoding
 // for data processing
-func Decode(data []byte) (Data, error) {
+func Decode(data Data) ([]byte, error) {
 	result := make([]byte, encoder.DecodedLen(len(data)))
-	n, err := encoder.Decode(result, data)
+	n, err := encoder.Decode(result, []byte(data))
 	if err != nil {
 		return nil, err
 	}
 
-	return Data(result[:n]), nil
+	return result[:n], nil
 }
