@@ -34,20 +34,40 @@ $(PROJECT)_%$(EXT):
 		-o ../$(PROJECT)_$*$(EXT) \
 		.
 
-.PHONY: update-deps
-update-deps:
-	for P in $(PLUGINS); do \
-		$(MAKE) mod-tidy PLUGIN=$$P; \
-	done
+.PHONY: test
+test: $(addprefix test-,$(PLUGINS))
 
-.PHONY: mod-tidy
-mod-tidy: PLUGIN=$(firstword $(PLUGINS))
-mod-tidy:
-	cd $(PLUGIN); $(GO) mod tidy
+.PHONY: test-%
+test-%:
+	cd $*; $(GO) test ./...
+
+.PHONY: format
+format: $(addprefix format-,$(PLUGINS))
+
+.PHONY: format-%
+format-%:
+	cd $*; $(GO) fmt ./...
+
+.PHONY: lint
+lint: $(addprefix lint-,$(PLUGINS))
+
+.PHONY: lint-%
+lint-%:
+	cd $*; $(GO) vet ./...
+
+.PHONY: update-deps
+update-deps: $(addprefix update-deps-,$(PLUGINS))
+
+.PHONY: update-deps-%
+update-deps-%:
+	cd $*; $(GO) mod tidy
 
 .PHONY: install
-install:
-	$(INSTALL_DATA) -D -t $(DESTDIR)$(PREFIX)/lib/$(PROJECT) $(PLUGIN_objects)
+install: $(addprefix install-,$(PLUGINS))
+
+.PHONY: install-%
+install-%: $(PROJECT)_%$(EXT)
+	$(INSTALL_DATA) -D -t $(DESTDIR)$(PREFIX)/lib/$(PROJECT) $^
 
 .PHONY: clean
 clean:

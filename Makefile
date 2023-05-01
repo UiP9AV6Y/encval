@@ -25,6 +25,10 @@ all: binaries plugins
 .PHONY: binaries
 binaries: $(PROGRAM_files)
 
+.PHONY: plugins
+plugins:
+	$(MAKE) -C plugins
+
 $(PROGRAM_files):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build $(GOBUILD_FLAGS) \
 		-ldflags="$(GOLD_FLAGS)" \
@@ -43,21 +47,19 @@ format:
 lint:
 	$(GO) vet ./...
 
-.PHONY: plugins
-plugins:
-	$(MAKE) -C plugins
-
 .PHONY: update-deps
 update-deps:
 	$(GO) mod tidy
-	$(MAKE) -C plugins $@
 
 .PHONY: install
-install:
-	$(INSTALL_PROGRAM) -D -t $(DESTDIR)$(PREFIX)/bin $(PROGRAM_files)
-	$(MAKE) -C plugins $@
+install: $(PROGRAM_files)
+	$(INSTALL_PROGRAM) -D -t $(DESTDIR)$(PREFIX)/bin $^
 
 .PHONY: clean
 clean:
 	$(RM) $(PROGRAM_files)
-	$(MAKE) -C plugins $@
+
+.PHONY: %-all
+%-all: %
+	$(MAKE) -C plugins $*
+
