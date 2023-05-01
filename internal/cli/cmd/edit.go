@@ -53,7 +53,7 @@ func (c *Edit) Run(ctx *GlobalOptions) error {
 			if err != nil {
 				if errors.Is(err, libfs.ErrNotExist) {
 					// there is nothing to decrypt when editing a new file
-					ctx.Logger().Info().Println("Editing non-existent file", c.File)
+					ctx.Logger().Debug().Println("Editing non-existent file", c.File)
 					return nil
 				}
 

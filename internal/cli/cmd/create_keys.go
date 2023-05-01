@@ -42,7 +42,7 @@ func (c *CreateKeys) Run(ctx *GlobalOptions) error {
 		return fmt.Errorf("%q does not require keys", ctx.EncryptMethod)
 	}
 
-	ctx.Logger().Info().Println("Generating keys for encryption with", ctx.EncryptMethod)
+	ctx.Logger().Debug().Println("Generating keys for encryption with", ctx.EncryptMethod)
 	return c.generateSecrets(gen.GenerateSecrets, log.NewContext(context.Background(), ctx.Logger()))
 }
 

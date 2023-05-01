@@ -39,13 +39,13 @@ func (c *Encrypt) Run(ctx *GlobalOptions) error {
 		if pErr != nil {
 			return err
 		}
-		ctx.Logger().Info().Printf("Found %d tokens in parsed input\n", len(tokens))
+		ctx.Logger().Debug().Printf("Found %d tokens in parsed input\n", len(tokens))
 	} else {
 		tokens, data, pErr = c.parseData(ctx.DefaultProvider())
 		if pErr != nil {
 			return err
 		}
-		ctx.Logger().Info().Printf("Got %d bytes as encryption input\n", data)
+		ctx.Logger().Debug().Printf("Got %d bytes as encryption input\n", data)
 	}
 
 	result, err := tokens.Convert(reg)

@@ -40,7 +40,7 @@ func (c *Recrypt) Run(ctx *GlobalOptions) error {
 		return err
 	}
 
-	ctx.Logger().Info().Printf("Found %d tokens in parsed input\n", len(tokens))
+	ctx.Logger().Debug().Printf("Found %d tokens in parsed input\n", len(tokens))
 
 	decrypted, err := tokens.Convert(reg)
 	if err != nil {
