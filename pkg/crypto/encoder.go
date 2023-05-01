@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 )
 
-var encoder = base64.RawStdEncoding.Strict()
+var encoder = base64.StdEncoding.Strict()
 
 // Encode is an opiniated Base64 encoder function
 // using a strict variant of base64.RawStdEncoding
