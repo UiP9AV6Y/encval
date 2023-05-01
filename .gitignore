@@ -3,6 +3,8 @@
 keys/
 .keys/
 .encval/
+/encval-
+/encval_
 /encval
 *.exe
 *.exe~
@@ -11,4 +13,5 @@ keys/
 *.dylib
 *.test
 *.out
-
+*.tgz
+*.zip

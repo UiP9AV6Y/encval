@@ -15,13 +15,21 @@ GOVET_FLAGS ?=
 CGO_ENABLED ?= 0
 
 ifeq ($(GOOS),windows)
-EXT := .exe
+EXE_EXT := .exe
+LIB_EXT := .dll
+DIST_EXT := .zip
 else
-EXT :=
+EXE_EXT :=
+LIB_EXT := .so
+DIST_EXT := .tgz
 endif
 
+PROJECT := encval
+
 ENTRYPOINTS := $(notdir $(patsubst %/main.go,%,$(wildcard ./cmd/*/main.go)))
-PROGRAM_files := $(addsuffix $(EXT),$(ENTRYPOINTS))
+PROGRAM_files := $(addsuffix $(EXE_EXT),$(ENTRYPOINTS))
+
+TARGET_TRIPLE := $(PROJECT)_$(GOOS)_$(GOARCH)$(GOARM)
 
 .PHONY: all
 all: binaries plugins
@@ -38,6 +46,27 @@ $(PROGRAM_files):
 		-ldflags="$(GOLD_FLAGS)" \
 		-o $@ \
 		./cmd/$(basename $@)
+
+.PHONY: dist
+dist: $(TARGET_TRIPLE)$(DIST_EXT)
+
+.PHONY: $(TARGET_TRIPLE)
+$(TARGET_TRIPLE): LICENSE.txt
+	$(INSTALL_DATA) -D -t $@ $^
+
+.PHONY: $(TARGET_TRIPLE)/bin
+$(TARGET_TRIPLE)/bin: $(PROGRAM_files)
+	$(INSTALL_PROGRAM) -D -t $@ $^
+
+.PHONY: $(TARGET_TRIPLE)/lib
+$(TARGET_TRIPLE)/lib: plugins
+	$(INSTALL_DATA) -D -t $@ $(wildcard plugins/*$(LIB_EXT))
+
+$(TARGET_TRIPLE).tgz: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin $(TARGET_TRIPLE)/lib
+	cd $< ; tar -czf ../$@ *
+
+$(TARGET_TRIPLE).zip: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin
+	cd $< ; zip -r ../$@ *
 
 .PHONY: test
 test:
@@ -61,7 +90,9 @@ install: $(PROGRAM_files)
 
 .PHONY: clean
 clean:
+	$(RM) *.zip *.tgz
 	$(RM) $(PROGRAM_files)
+	$(RM) -r $(PROJECT)_*
 
 .PHONY: %-all
 %-all: %

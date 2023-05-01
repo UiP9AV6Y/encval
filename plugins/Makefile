@@ -15,15 +15,17 @@ GOVET_FLAGS ?=
 CGO_ENABLED ?= 0
 
 ifeq ($(GOOS),windows)
-EXT := .dll
+EXE_EXT := .exe
+LIB_EXT := .dll
 else
-EXT := .so
+EXE_EXT :=
+LIB_EXT := .so
 endif
 
 PROJECT := encval
 
 PLUGINS := $(notdir $(patsubst %/main.go,%,$(wildcard ./*/main.go)))
-PLUGIN_objects := $(addprefix $(PROJECT)_,$(addsuffix $(EXT),$(PLUGINS)))
+PLUGIN_objects := $(addprefix $(PROJECT)_,$(addsuffix $(LIB_EXT),$(PLUGINS)))
 
 .PHONY: all
 all: plugins
@@ -31,11 +33,11 @@ all: plugins
 .PHONY: plugins
 plugins: $(PLUGIN_objects)
 
-$(PROJECT)_%$(EXT):
+$(PROJECT)_%$(LIB_EXT):
 	cd $* ; GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build -buildmode=plugin \
 		$(GOBUILD_FLAGS) \
 		-ldflags="$(GOLD_FLAGS)" \
-		-o ../$(PROJECT)_$*$(EXT) \
+		-o ../$(PROJECT)_$*$(LIB_EXT) \
 		.
 
 .PHONY: test
@@ -70,7 +72,7 @@ update-deps-%:
 install: $(addprefix install-,$(PLUGINS))
 
 .PHONY: install-%
-install-%: $(PROJECT)_%$(EXT)
+install-%: $(PROJECT)_%$(LIB_EXT)
 	$(INSTALL_DATA) -D -t $(DESTDIR)$(PREFIX)/lib/$(PROJECT) $^
 
 .PHONY: clean
