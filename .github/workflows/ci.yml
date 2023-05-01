@@ -63,27 +63,31 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Build all
-        run: make all install-all PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
+        run: make dist
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: encval-dist
-          path: dist
+          path: "*.tgz"
 
   smoke:
     name: Smoke tests
     runs-on: ubuntu-latest
     needs: [build]
+    env:
+      ENCVAL_HOME: /opt/encval
     steps:
       - uses: actions/download-artifact@v3
         with:
           name: encval-dist
 
       - name: Setup environment
-        run: |
-          echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/dist/lib/encval" >> "$GITHUB_ENV"
-          echo "${GITHUB_WORKSPACE}/dist/bin" >> $GITHUB_PATH
+        run: &setup_environment |
+          mkdir -p ${ENCVAL_HOME}
+          tar -xzf *.tgz -C ${ENCVAL_HOME}
+          echo "LD_LIBRARY_PATH=${ENCVAL_HOME}/lib" >> "$GITHUB_ENV"
+          echo "${ENCVAL_HOME}/bin" >> $GITHUB_PATH
 
       - name: Show help
         run: encval --help
@@ -95,12 +99,14 @@ jobs:
     name: Compatibility tests
     runs-on: ubuntu-latest
     needs: [build]
+    env:
+      ENCVAL_HOME: /opt/encval
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@v3
         with:
-          name: encval-linux-amd64-${{ github.sha }}
+          name: encval-dist
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -110,7 +116,7 @@ jobs:
         run: gem install hiera-eyaml
 
       - name: Setup environment
-        run:  echo "${GITHUB_WORKSPACE}/dist/bin" >> $GITHUB_PATH
+        run: *setup_environment
 
       - name: Run EYAML compatibility tests
         run: make -C test clean eyaml-compat
