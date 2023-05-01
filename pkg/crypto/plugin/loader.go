@@ -21,7 +21,12 @@ var (
 
 func init() {
 	if LoadPath == "" {
-		LoadPath = osLoadPath()
+		loadPath := []string{
+			workdirLoadPath(),
+			execLoadPath(),
+			osLoadPath(),
+		}
+		LoadPath = strings.Join(loadPath, string(os.PathListSeparator))
 	}
 
 	if LoadEnv == "" {
@@ -29,6 +34,31 @@ func init() {
 	}
 }
 
+// workdirLoadPath is intended for development, as plugins are built
+// into the plugins directory under the worktree root
+func workdirLoadPath() string {
+	d, err := os.Getwd()
+	if err != nil {
+		d = "."
+	}
+
+	return filepath.Join(d, "plugins")
+}
+
+// execLoadPath is intended for usage with the distributable, as plugins
+// are located in a directory parallel to the bin directory with the executables
+func execLoadPath() string {
+	d := ".."
+	ex, err := os.Executable()
+	if err == nil {
+		d = filepath.Dir(filepath.Dir(ex))
+	}
+
+	return filepath.Join(d, "lib")
+}
+
+// osLoadPath is inteded for usage with system packages, as plugins
+// are located in a system designated library location
 func osLoadPath() string {
 	switch runtime.GOOS {
 	case "windows":
