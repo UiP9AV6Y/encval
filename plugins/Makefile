@@ -9,6 +9,9 @@ GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
 GOLD_FLAGS ?= -s -w
+GOTEST_FLAGS ?= -race
+GOFMT_FLAGS ?=
+GOVET_FLAGS ?=
 CGO_ENABLED ?= 0
 
 ifeq ($(GOOS),windows)
@@ -40,21 +43,21 @@ test: $(addprefix test-,$(PLUGINS))
 
 .PHONY: test-%
 test-%:
-	cd $*; $(GO) test ./...
+	cd $*; $(GO) test $(GOTEST_FLAGS) ./...
 
 .PHONY: format
 format: $(addprefix format-,$(PLUGINS))
 
 .PHONY: format-%
 format-%:
-	cd $*; $(GO) fmt ./...
+	cd $*; $(GO) fmt $(GOFMT_FLAGS) ./...
 
 .PHONY: lint
 lint: $(addprefix lint-,$(PLUGINS))
 
 .PHONY: lint-%
 lint-%:
-	cd $*; $(GO) vet ./...
+	cd $*; $(GO) vet $(GOVET_FLAGS) ./...
 
 .PHONY: update-deps
 update-deps: $(addprefix update-deps-,$(PLUGINS))
