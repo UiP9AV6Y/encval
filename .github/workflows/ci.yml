@@ -83,11 +83,7 @@ jobs:
           name: encval-dist
 
       - name: Setup environment
-        run: &setup_environment |
-          mkdir -p ${ENCVAL_HOME}
-          tar -xzf *.tgz -C ${ENCVAL_HOME}
-          echo "LD_LIBRARY_PATH=${ENCVAL_HOME}/lib" >> "$GITHUB_ENV"
-          echo "${ENCVAL_HOME}/bin" >> $GITHUB_PATH
+        run: make ci-setup PREFIX=${ENCVAL_HOME}
 
       - name: Show help
         run: encval --help
@@ -116,7 +112,7 @@ jobs:
         run: gem install hiera-eyaml
 
       - name: Setup environment
-        run: *setup_environment
+        run: make ci-setup PREFIX=${ENCVAL_HOME}
 
       - name: Run EYAML compatibility tests
         run: make -C test clean eyaml-compat

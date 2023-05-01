@@ -4,6 +4,8 @@ INSTALL_DATA = $(INSTALL) -m0644
 INSTALL_PROGRAM = $(INSTALL) -m0755
 
 PREFIX ?= /usr/local
+GITHUB_ENV ?= /dev/null
+GITHUB_PATH ?= /dev/null
 
 GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
@@ -67,6 +69,13 @@ $(TARGET_TRIPLE).tgz: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin $(TARGET_TRIPLE)/lib
 
 $(TARGET_TRIPLE).zip: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin
 	cd $< ; zip -r ../$@ *
+
+.PHONY: ci-setup
+ci-setup:
+	$(INSTALL_DIR) $(PREFIX)
+	tar -xzf *.tgz -C $(PREFIX)
+	echo "LD_LIBRARY_PATH=$(PREFIX)/lib" >> $(GITHUB_ENV)
+	echo "$(PREFIX)/bin" >> $(GITHUB_PATH)
 
 .PHONY: test
 test:
