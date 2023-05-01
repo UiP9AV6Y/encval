@@ -9,6 +9,7 @@ GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
 GOLD_FLAGS ?= -s -w
+CGO_ENABLED ?= 0
 
 ifeq ($(GOOS),windows)
 EXT := .exe
@@ -30,7 +31,7 @@ plugins:
 	$(MAKE) -C plugins
 
 $(PROGRAM_files):
-	GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build $(GOBUILD_FLAGS) \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GOBUILD_FLAGS) \
 		-ldflags="$(GOLD_FLAGS)" \
 		-o $@ \
 		./cmd/$(basename $@)

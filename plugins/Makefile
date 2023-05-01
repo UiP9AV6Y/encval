@@ -9,6 +9,7 @@ GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
 GOLD_FLAGS ?= -s -w
+CGO_ENABLED ?= 0
 
 ifeq ($(GOOS),windows)
 EXT := .dll
@@ -28,7 +29,7 @@ all: plugins
 plugins: $(PLUGIN_objects)
 
 $(PROJECT)_%$(EXT):
-	cd $* ; GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -buildmode=plugin \
+	cd $* ; GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build -buildmode=plugin \
 		$(GOBUILD_FLAGS) \
 		-ldflags="$(GOLD_FLAGS)" \
 		-o ../$(PROJECT)_$*$(EXT) \
