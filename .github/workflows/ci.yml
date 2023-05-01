@@ -8,18 +8,23 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+
 jobs:
 
-  build:
-    name: Build and test ${{ matrix.os }} ${{ matrix.arch }}
+  unit:
+    name: Unit tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [linux, darwin, windows]
-        arch: [amd64, arm64]
-        exclude:
-          - os: windows
-            arch: arm64
+        include:
+          - {GOOS: linux, GOARCH: amd64}
+          - {GOOS: linux, GOARCH: arm, GOARM: 6}
+          - {GOOS: linux, GOARCH: arm64}
+          - {GOOS: darwin, GOARCH: amd64}
+          - {GOOS: darwin, GOARCH: arm64}
+          - {GOOS: windows, GOARCH: amd64}
     steps:
       - uses: actions/checkout@v3
 
@@ -31,30 +36,39 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Build CLI
-        run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} make binaries
-
-      - name: Build Plugins
-        if: matrix.os != 'windows'
-        run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} make plugins
+          restore-keys: ${{ runner.os }}-go-
 
       - name: Unit Test
         run: make test-all
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.GOOS }}
+          GOARCH: ${{ matrix.GOARCH }}
+          GOARM: ${{ matrix.GOARM }}
 
-      - name: Assemble binaries
-        run: make install PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
-      
-      - name: Assemble plugins
-        if: matrix.os != 'windows'
-        run: make -C plugins install PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
+  build:
+    name: Build artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Upload artifact
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+
+      - name: Build all
+        run: make all install-all PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: encval-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          name: encval-dist
           path: dist
 
   smoke:
@@ -64,7 +78,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: encval-linux-amd64-${{ github.sha }}
+          name: encval-dist
 
       - name: Setup environment
         run: |
@@ -82,6 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+      - uses: actions/checkout@v3
+
       - uses: actions/download-artifact@v3
         with:
           name: encval-linux-amd64-${{ github.sha }}
