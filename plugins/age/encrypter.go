@@ -69,7 +69,12 @@ func (a *AgeEncrypter) Decrypt(data crypto.Data) (crypto.Data, error) {
 		a.idsCache = i
 	}
 
-	src := bytes.NewReader([]byte(data))
+	raw, err := crypto.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+
+	src := bytes.NewReader([]byte(raw))
 	r, err := age.Decrypt(src, a.idsCache...)
 	if err != nil {
 		return nil, err
@@ -80,7 +85,7 @@ func (a *AgeEncrypter) Decrypt(data crypto.Data) (crypto.Data, error) {
 		return nil, err
 	}
 
-	return crypto.Decode(buf.Bytes())
+	return crypto.Data(buf.Bytes()), nil
 }
 
 func (a *AgeEncrypter) GenerateSecrets(force bool, ctx context.Context) error {

@@ -47,7 +47,7 @@ func (r Recipients) Save(rcpt age.Recipient, force bool) (string, error) {
 
 	path := filepath.Join(string(r), x25519.String()+RecipientsFileExt)
 
-  if force {
+	if force {
 		return path, fs.ReinstallFile(path, []byte(x25519.String()), 0644)
 	}
 

@@ -47,7 +47,7 @@ func (i Identities) Save(rcpt age.Identity, force bool) (string, error) {
 
 	path := filepath.Join(string(i), x25519.Recipient().String()+IdentitiesFileExt)
 
-  if force {
+	if force {
 		return path, fs.ReinstallFile(path, []byte(x25519.String()), 0644)
 	}
 

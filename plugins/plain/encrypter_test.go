@@ -10,60 +10,51 @@ import (
 
 func TestEncrypt(t *testing.T) {
 	type testCase struct {
-		name         string
-		input        string
-		urlEncoding  bool
-		padding      bool
-		assertError  bool
-		assertOutput string
+		name        string
+		input       string
+		urlEncoding bool
+		padding     bool
 	}
 
 	run := func(t *testing.T, tc testCase) {
-		out = New(tc.urlEncoding, tc.padding)
+		out := New(tc.urlEncoding, tc.padding)
 		assert.Assert(t, out != nil)
 
-		got, err := out.Encrypt(crypto.Data(tc.input))
+		enc, err := out.Encrypt(crypto.Data(tc.input))
+		assert.NilError(t, err)
+		dec, err := out.Decrypt(enc)
+		assert.NilError(t, err)
 
-		if tc.assertError {
-			assert.Assert(t, err != nil)
-		} else {
-			assert.Equal(t, string(got), tc.assertOutput)
-		}
+		assert.Equal(t, string(dec), tc.input)
 	}
 	testCases := []testCase{
 		{
-			name:         "empty",
-			input:        "",
-			assertOutput: "",
+			name:  "empty",
+			input: "",
 		},
 		{
-			name:         "empty (URL encoding)",
-			input:        "",
-			assertOutput: "",
-			urlEncoding:  true,
+			name:        "empty (URL encoding)",
+			input:       "",
+			urlEncoding: true,
 		},
 		{
-			name:         "space",
-			input:        " ",
-			assertOutput: "IA",
+			name:  "space",
+			input: " ",
 		},
 		{
-			name:         "test",
-			input:        `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
-			assertOutput: `TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWE`,
+			name:  "test",
+			input: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
 		},
 		{
-			name:         "test (padding)",
-			input:        `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
-			assertOutput: `TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWE=`,
-			padding:      true,
+			name:    "test (padding)",
+			input:   `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
+			padding: true,
 		},
 		{
-			name:         "test (padding, URL encoding)",
-			input:        `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
-			assertOutput: `TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWE=`,
-			urlEncoding:  true,
-			padding:      true,
+			name:        "test (padding, URL encoding)",
+			input:       `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`,
+			urlEncoding: true,
+			padding:     true,
 		},
 	}
 
