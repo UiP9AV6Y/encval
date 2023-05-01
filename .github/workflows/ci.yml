@@ -42,10 +42,14 @@ jobs:
         run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} make plugins
 
       - name: Unit Test
-        run: make test
+        run: make test-all
 
-      - name: Assemble artifacts
+      - name: Assemble binaries
         run: make install PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
+      
+      - name: Assemble plugins
+        if: matrix.os != 'windows'
+        run: make -C plugins install PREFIX= DESTDIR=${GITHUB_WORKSPACE}/dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
