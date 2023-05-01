@@ -9,12 +9,12 @@ import (
 type Root struct {
 	*cmd.GlobalOptions
 
-	CreateKeys *cmd.CreateKeys `kong:"cmd,help='Create a set of keys with which to encrypt/decrypt data',aliases='init'"`
-	Decrypt    *cmd.Decrypt    `kong:"cmd,help='Decrypt some data'"`
-	Edit       *cmd.Edit       `kong:"cmd,help='Edit an encrypted file'"`
-	Encrypt    *cmd.Encrypt    `kong:"cmd,help='Encrypt some data'"`
-	Password   *cmd.Password   `kong:"cmd,help='Encrypt a password entered on the terminal'"`
-	Recrypt    *cmd.Recrypt    `kong:"cmd,help='Recrypt some data'"`
+	CreateKeys *cmd.CreateKeys `kong:"cmd,help='Create a set of keys with which to encrypt/decrypt data',aliases='init,createkeys,generate-secrets'"`
+	Decrypt    *cmd.Decrypt    `kong:"cmd,help='Decrypt some data',aliases='decipher,decode'"`
+	Edit       *cmd.Edit       `kong:"cmd,help='Edit an encrypted file',aliases='open'"`
+	Encrypt    *cmd.Encrypt    `kong:"cmd,help='Encrypt some data',aliases='encipher,encode'"`
+	Password   *cmd.Password   `kong:"cmd,help='Encrypt a password entered on the terminal',aliases='pass,prompt'"`
+	Recrypt    *cmd.Recrypt    `kong:"cmd,help='Recrypt some data',aliases='recipher,recode'"`
 	Version    *cmd.Version    `kong:"cmd,help='Show version information'"`
 }
 
