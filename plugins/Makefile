@@ -8,11 +8,13 @@ PREFIX ?= /usr/local
 GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
+GOBUILD_TAGS ?=
+GOBUILD_FLAGS ?=
 GOLD_FLAGS ?= -s -w
-GOTEST_FLAGS ?= -race
+GOTEST_FLAGS ?=
 GOFMT_FLAGS ?=
 GOVET_FLAGS ?=
-CGO_ENABLED ?= 0
+CGO_ENABLED ?= 1
 
 ifeq ($(GOOS),windows)
 EXE_EXT := .exe
@@ -36,7 +38,8 @@ plugins: $(PLUGIN_objects)
 $(PROJECT)_%$(LIB_EXT):
 	cd $* ; GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build -buildmode=plugin \
 		$(GOBUILD_FLAGS) \
-		-ldflags="$(GOLD_FLAGS)" \
+		-tags "$(GOBUILD_TAGS)" \
+		-ldflags "$(GOLD_FLAGS)" \
 		-o ../$(PROJECT)_$*$(LIB_EXT) \
 		.
 

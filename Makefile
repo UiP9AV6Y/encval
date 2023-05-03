@@ -3,6 +3,10 @@ INSTALL_DIR = $(INSTALL) -d
 INSTALL_DATA = $(INSTALL) -m0644
 INSTALL_PROGRAM = $(INSTALL) -m0755
 
+TAR ?= tar
+ZIP ?= zip
+UNZIP ?= unzip
+
 PREFIX ?= /usr/local
 GITHUB_ENV ?= /dev/null
 GITHUB_PATH ?= /dev/null
@@ -10,11 +14,14 @@ GITHUB_PATH ?= /dev/null
 GO ?= go
 GOOS ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
+GOBUILD_TAGS ?=
+GOBUILD_FLAGS ?=
 GOLD_FLAGS ?= -s -w
-GOTEST_FLAGS ?= -race
+GOTEST_FLAGS ?=
 GOFMT_FLAGS ?=
 GOVET_FLAGS ?=
 CGO_ENABLED ?= 0
+GO_DO := GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO)
 
 ifeq ($(GOOS),windows)
 EXE_EXT := .exe
@@ -44,8 +51,10 @@ plugins:
 	$(MAKE) -C plugins
 
 $(PROGRAM_files):
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GOBUILD_FLAGS) \
-		-ldflags="$(GOLD_FLAGS)" \
+	 $(GO_DO) build \
+		$(GOBUILD_FLAGS) \
+		-tags "$(GOBUILD_TAGS)" \
+		-ldflags "$(GOLD_FLAGS)" \
 		-o $@ \
 		./cmd/$(basename $@)
 
@@ -65,37 +74,55 @@ $(TARGET_TRIPLE)/lib: plugins
 	$(INSTALL_DATA) -D -t $@ $(wildcard plugins/*$(LIB_EXT))
 
 $(TARGET_TRIPLE).tgz: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin $(TARGET_TRIPLE)/lib
-	cd $< ; tar -czf ../$@ *
+	cd $< ; $(TAR) -czf ../$@ *
 
 $(TARGET_TRIPLE).zip: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin
-	cd $< ; zip -r ../$@ *
+	cd $< ; $(ZIP) -r ../$@ *
 
-.PHONY: ci-setup
-ci-setup:
-	$(INSTALL_DIR) $(PREFIX)
-	tar -xzf *.tgz -C $(PREFIX)
-	echo "LD_LIBRARY_PATH=$(PREFIX)/lib" >> $(GITHUB_ENV)
-	echo "$(PREFIX)/bin" >> $(GITHUB_PATH)
+.PHONY: ci-deps
+ci-deps:
+	apt-get update -qq
+	apt-get install -y --no-install-recommends \
+		build-essential
+
+.PHONY: ci-env
+ci-env:
+	echo "LD_LIBRARY_PATH=$(DESTDIR)$(PREFIX)/lib" >> $(GITHUB_ENV)
+	echo "$(DESTDIR)$(PREFIX)/bin" >> $(GITHUB_PATH)
 
 .PHONY: test
 test:
-	$(GO) test $(GOTEST_FLAGS) ./...
+	$(GO_DO) test $(GOTEST_FLAGS) ./...
 
 .PHONY: format
 format:
-	$(GO) fmt $(GOFMT_FLAGS) ./...
+	$(GO_DO) fmt $(GOFMT_FLAGS) ./...
 
 .PHONY: lint
 lint:
-	$(GO) vet $(GOVET_FLAGS) ./...
+	$(GO_DO) vet $(GOVET_FLAGS) ./...
 
 .PHONY: update-deps
 update-deps:
-	$(GO) mod tidy
+	$(GO_DO) mod tidy
 
 .PHONY: install
 install: $(PROGRAM_files)
 	$(INSTALL_PROGRAM) -D -t $(DESTDIR)$(PREFIX)/bin $^
+
+.PHONY: install-dist
+install-dist: install$(DIST_EXT)
+
+$(DESTDIR)$(PREFIX):
+	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)
+
+.PHONY: install.tgz
+install.tgz: $(TARGET_TRIPLE).tgz $(DESTDIR)$(PREFIX)
+	$(TAR) -xzf $< -C $(DESTDIR)$(PREFIX)
+
+.PHONY: install.zip
+install.zip: $(TARGET_TRIPLE).zip $(DESTDIR)$(PREFIX)
+	$(UNZIP) $< -d $(DESTDIR)$(PREFIX)
 
 .PHONY: clean
 clean:

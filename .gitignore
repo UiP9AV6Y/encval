@@ -3,8 +3,8 @@
 keys/
 .keys/
 .encval/
-/encval-
-/encval_
+/encval-*
+/encval_*
 /encval
 *.exe
 *.exe~
