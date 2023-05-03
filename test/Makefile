@@ -18,10 +18,10 @@ TEST_PAYLOAD := $(shell date)
 export ENCVAL_PKCS_7_PRIVATE_KEY ENCVAL_PKCS_7_PUBLIC_KEY ENCVAL_ENCRYPT_METHOD
 
 .PHONY: all
-all: eyaml-compat encval-compat
+all: eyaml-compat encval-compat smoke
 
 $(ENCVAL_PKCS_7_PRIVATE_KEY) $(ENCVAL_PKCS_7_PUBLIC_KEY):
-	$(EYAML) createkeys $(EYAML_ARGS)
+	$(ENCVAL) create-keys
 
 .PHONY: eyaml-compat
 eyaml-compat: $(ENCVAL_PKCS_7_PRIVATE_KEY) $(ENCVAL_PKCS_7_PUBLIC_KEY)
@@ -41,6 +41,12 @@ encval-compat: $(ENCVAL_PKCS_7_PRIVATE_KEY) $(ENCVAL_PKCS_7_PUBLIC_KEY)
 	| $(ENCVAL) encrypt - \
 	| $(ENCVAL) decrypt - \
 	| ./bin/compare-output.sh "$(TEST_PAYLOAD)"
+
+.PHONY: smoke
+smoke: $(ENCVAL_PKCS_7_PRIVATE_KEY) $(ENCVAL_PKCS_7_PUBLIC_KEY)
+	$(ENCVAL) --help
+	$(ENCVAL) version
+	echo $(TEST_PAYLOAD) | $(ENCVAL) encrypt -
 
 .PHONY: clean
 clean:
