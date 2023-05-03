@@ -38,10 +38,12 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
+      - name: Setup build environment
+        run: make ci-deps
+
       - name: Unit Test
         run: make test-all
         env:
-          CGO_ENABLED: 0
           GOOS: ${{ matrix.GOOS }}
           GOARCH: ${{ matrix.GOARCH }}
           GOARM: ${{ matrix.GOARM }}
@@ -62,8 +64,11 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
+      - name: Setup build environment
+        run: make ci-deps
+
       - name: Build all
-        run: make dist
+        run: make dist GOBUILD_TAGS=crypto_plugins CGO_ENABLED=1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -78,18 +83,17 @@ jobs:
     env:
       ENCVAL_HOME: /opt/encval
     steps:
+      - uses: actions/checkout@v3
+
       - uses: actions/download-artifact@v3
         with:
           name: encval-dist
 
       - name: Setup environment
-        run: make ci-setup PREFIX=${ENCVAL_HOME}
+        run: make install-dist ci-env PREFIX=${ENCVAL_HOME}
 
       - name: Show help
-        run: encval --help
-
-      - name: Run version subcommand
-        run: encval version
+        run: make -C test clean smoke
 
   compat:
     name: Compatibility tests
@@ -112,7 +116,7 @@ jobs:
         run: gem install hiera-eyaml
 
       - name: Setup environment
-        run: make ci-setup PREFIX=${ENCVAL_HOME}
+        run: make install-dist ci-env PREFIX=${ENCVAL_HOME}
 
       - name: Run EYAML compatibility tests
         run: make -C test clean eyaml-compat
