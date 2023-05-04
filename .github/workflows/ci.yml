@@ -16,15 +16,6 @@ jobs:
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - {GOOS: linux, GOARCH: amd64}
-          - {GOOS: linux, GOARCH: arm, GOARM: 6}
-          - {GOOS: linux, GOARCH: arm64}
-          - {GOOS: darwin, GOARCH: amd64}
-          - {GOOS: darwin, GOARCH: arm64}
-          - {GOOS: windows, GOARCH: amd64}
     steps:
       - uses: actions/checkout@v3
 
@@ -36,15 +27,24 @@ jobs:
         run: make ci-deps
 
       - name: Unit Test
-        run: make test-all
-        env:
-          GOOS: ${{ matrix.GOOS }}
-          GOARCH: ${{ matrix.GOARCH }}
-          GOARM: ${{ matrix.GOARM }}
+        run: make test-all GOTEST_FLAGS=-race
 
   build:
     name: Build artifacts
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {GOOS: linux, GOARCH: amd64}
+          - {GOOS: linux, GOARCH: arm, GOARM: 6}
+          - {GOOS: linux, GOARCH: arm64}
+          - {GOOS: darwin, GOARCH: amd64}
+          - {GOOS: darwin, GOARCH: arm64}
+          - {GOOS: windows, GOARCH: amd64}
+    env:
+      GOOS: ${{ matrix.GOOS }}
+      GOARCH: ${{ matrix.GOARCH }}
+      GOARM: ${{ matrix.GOARM }}
     steps:
       - uses: actions/checkout@v3
 
@@ -55,51 +55,46 @@ jobs:
       - name: Setup build environment
         run: make ci-deps
 
-      - name: Build all
+      - name: "Build Linux-x64"
         run: make dist GOBUILD_TAGS=crypto_plugins CGO_ENABLED=1
+        if: "matrix.GOOS == 'linux' && matrix.GOARCH == 'amd64'"
+
+      - name: "Build ${{ matrix.GOOS }}/${{ matrix.GOARCH }}${{ matrix.GOARM }}"
+        run: make dist
+        if: "matrix.GOOS != 'linux' && matrix.GOARCH != 'amd64'"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: encval-dist
-          path: "*.tgz"
+          name: encval_${{ matrix.GOOS }}_${{ matrix.GOARCH }}${{ matrix.GOARM }}.zip
+          path: encval_${{ matrix.GOOS }}_${{ matrix.GOARCH }}${{ matrix.GOARM }}.zip
           retention-days: 5
+        if: "matrix.GOOS == 'windows'"
 
-  smoke:
-    name: Smoke tests
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: encval_${{ matrix.GOOS }}_${{ matrix.GOARCH }}${{ matrix.GOARM }}.tgz
+          path: encval_${{ matrix.GOOS }}_${{ matrix.GOARCH }}${{ matrix.GOARM }}.tgz
+          retention-days: 5
+        if: "matrix.GOOS != 'windows'"
+
+  e2e:
+    name: End-to-End tests
     runs-on: ubuntu-latest
     needs: [build]
     env:
       ENCVAL_HOME: /opt/encval
     steps:
       - uses: actions/checkout@v3
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: encval-dist
-
-      - name: Setup environment
-        run: make install-dist ci-env PREFIX=${ENCVAL_HOME}
-
-      - name: Show help
-        run: make -C test clean smoke
-
-  compat:
-    name: Compatibility tests
-    runs-on: ubuntu-latest
-    needs: [build]
-    env:
-      ENCVAL_HOME: /opt/encval
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: encval-dist
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: encval_linux_amd64.tgz
 
       - name: Install EYAML
         run: gem install hiera-eyaml
@@ -107,9 +102,12 @@ jobs:
       - name: Setup environment
         run: make install-dist ci-env PREFIX=${ENCVAL_HOME}
 
+      - name: Run tests
+        run: make -C test smoke
+
       - name: Run EYAML compatibility tests
-        run: make -C test clean eyaml-compat
+        run: make -C test eyaml-compat
 
       - name: Run ENCVAL compatibility tests
-        run: make -C test clean encval-compat
+        run: make -C test encval-compat
 
