@@ -63,6 +63,7 @@ jobs:
         with:
           name: encval-dist
           path: "*.tgz"
+          retention-days: 5
 
   smoke:
     name: Smoke tests
