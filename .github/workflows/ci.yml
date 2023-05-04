@@ -27,7 +27,7 @@ jobs:
         run: make ci-deps
 
       - name: Unit Test
-        run: make test-all GOTEST_FLAGS=-race
+        run: make test-all CGO_ENABLED=1 GOTEST_FLAGS=-race
 
   build:
     name: Build artifacts
@@ -61,7 +61,7 @@ jobs:
 
       - name: "Build ${{ matrix.GOOS }}/${{ matrix.GOARCH }}${{ matrix.GOARM }}"
         run: make dist
-        if: "matrix.GOOS != 'linux' && matrix.GOARCH != 'amd64'"
+        if: "matrix.GOOS != 'linux' || matrix.GOARCH != 'amd64'"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
