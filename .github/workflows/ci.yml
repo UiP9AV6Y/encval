@@ -32,12 +32,6 @@ jobs:
         with:
           go-version: '1.20'
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
       - name: Setup build environment
         run: make ci-deps
 
@@ -57,12 +51,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
 
       - name: Setup build environment
         run: make ci-deps
