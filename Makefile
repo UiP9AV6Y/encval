@@ -7,6 +7,8 @@ TAR ?= tar
 ZIP ?= zip
 UNZIP ?= unzip
 
+SUDO ?= sudo
+
 PREFIX ?= /usr/local
 GITHUB_ENV ?= /dev/null
 GITHUB_PATH ?= /dev/null
@@ -81,8 +83,8 @@ $(TARGET_TRIPLE).zip: $(TARGET_TRIPLE) $(TARGET_TRIPLE)/bin
 
 .PHONY: ci-deps
 ci-deps:
-	apt-get update -qq
-	apt-get install -y --no-install-recommends \
+	$(SUDO) apt-get update -qq
+	$(SUDO) apt-get install -y --no-install-recommends \
 		build-essential
 
 .PHONY: ci-env
